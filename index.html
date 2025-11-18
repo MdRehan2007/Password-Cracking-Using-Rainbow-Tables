@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rainbow Table Demo – Mohammad Rehan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg-main: #020617;
+      --bg-card: #020617;
+      --bg-card-alt: #02081f;
+      --accent: #22f4c8;
+      --accent-soft: #16a3a5;
+      --text-main: #e5e7eb;
+      --text-sub: #9ca3af;
+      --border-soft: #1f2937;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: radial-gradient(circle at top, #020d25 0, #020617 45%, #000 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 230px;
+      background: #020617;
+      border-right: 1px solid #111827;
+      padding: 18px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .logo {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 10px;
+    }
+    .logo-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: .04em;
+    }
+    .logo-sub {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .menu-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      color: var(--text-sub);
+      margin-top: 6px;
+      margin-bottom: 4px;
+    }
+
+    .menu-item {
+      padding: 7px 9px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-sub);
+      margin-bottom: 2px;
+    }
+    .menu-item:hover,
+    .menu-item.active {
+      background: #0f172a;
+      color: var(--accent);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      font-size: 11px;
+      color: var(--text-sub);
+      border-top: 1px solid #111827;
+      padding-top: 8px;
+    }
+    .sidebar-footer strong {
+      color: var(--accent);
+    }
+
+    /* Main content */
+    .main {
+      flex: 1;
+      min-height: 100vh;
+    }
+
+    .app-shell {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 16px 60px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .lock-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 20px;
+      background: radial-gradient(circle at 25% 0, #5fffe3, #019c92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 40px rgba(34, 244, 200, 0.35);
+    }
+
+    .lock-icon-inner {
+      width: 26px;
+      height: 26px;
+      border-radius: 9px;
+      border: 2px solid #012a28;
+      border-top-width: 3px;
+      position: relative;
+    }
+
+    .lock-icon-inner::before {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 10px;
+      border-radius: 20px 20px 0 0;
+      border: 2px solid #012a28;
+      border-bottom: none;
+      top: -9px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .header-text h1 {
+      font-size: 26px;
+      font-weight: 600;
+    }
+
+    .header-text p {
+      color: var(--text-sub);
+      margin-top: 4px;
+      font-size: 13px;
+    }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .card {
+      background: linear-gradient(135deg, #020617 0%, #02081f 100%);
+      border-radius: 18px;
+      border: 1px solid var(--border-soft);
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.55);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .card-header span {
+      font-size: 12px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: .12em;
+    }
+
+    .card h2 { font-size: 18px; }
+    .card p {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-top: 4px;
+      margin-bottom: 10px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    label {
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .input, .select, textarea {
+      width: 100%;
+      padding: 9px 11px;
+      background: #0f172a;
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      color: #fff;
+      outline: none;
+      font-size: 14px;
+    }
+
+    textarea { resize: vertical; min-height: 70px; }
+
+    .input:focus, .select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(34,244,200,0.3);
+      background: #020617;
+    }
+
+    .btn-main {
+      margin-top: 16px;
+      width: 100%;
+      padding: 11px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(90deg,#19f0c5,#05c2cf);
+      color: #012020;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: .08em;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .btn-main:hover {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+    }
+
+    .btn-main:active {
+      transform: translateY(1px);
+    }
+
+    .result-box {
+      margin-top: 10px;
+      padding: 10px 11px;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid #111827;
+      font-family: ui-monospace, Menlo, Monaco, Consolas, "Courier New", monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .small-note {
+      font-size: 11px;
+      color: var(--text-sub);
+      margin-top: 4px;
+    }
+
+    /* Chains */
+    .chain-card {
+      background: #020b1f;
+      padding: 10px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      border: 1px solid #111827;
+    }
+
+    .chain-header {
+      display: flex;
+      justify-content: space-between;
+      align-items:center;
+      cursor: pointer;
+    }
+
+    .chain-header-left {
+      color: #22f4c8;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .chain-header-right {
+      display:flex;
+      gap:8px;
+      align-items:center;
+      font-size: 12px;
+      color:#e5e7eb;
+    }
+
+    .chip {
+      padding: 4px 9px;
+      border-radius:999px;
+      background:#010a1c;
+      border:1px solid #1f2937;
+      font-size: 12px;
+    }
+
+    .chevron {
+      font-size:16px;
+      color:#64748b;
+      transition: transform .15s ease;
+    }
+    .chevron.open { transform: rotate(90deg); }
+
+    .chain-body {
+      display:none;
+      margin-top:10px;
+    }
+
+    .step {
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom:6px;
+    }
+
+    .step-password { background: #010f20; }
+    .step-hash { background: #06121f; }
+
+    .step-label {
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:#22f4c8;
+      margin-bottom:4px;
+    }
+
+    .step-value {
+      font-family: ui-monospace, Menlo, Monaco, Consolas, "Courier New", monospace;
+      font-size: 12px;
+    }
+
+    /* Leak table */
+    .leak-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .leak-table th,
+    .leak-table td {
+      border: 1px solid #1f2937;
+      padding: 6px 8px;
+      text-align: left;
+    }
+
+    .leak-table th {
+      background: #020617;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 11px;
+    }
+
+    .leak-hash {
+      font-family: ui-monospace, Menlo, Monaco, Consolas, "Courier New", monospace;
+      color: var(--text-sub);
+      font-size: 11px;
+    }
+
+    .leak-link {
+      color: #38bdf8;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 12px;
+    }
+
+    /* Stored table */
+    .stored-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    .stored-table th, .stored-table td {
+      border: 1px solid #1f2937;
+      padding: 6px 8px;
+      text-align: left;
+    }
+    .stored-table th {
+      background:#020617;
+      color:var(--accent);
+      font-size:11px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    @media (max-width: 900px){
+      .form-grid{grid-template-columns:repeat(2,1fr);}
+    }
+    @media (max-width: 640px){
+      body { flex-direction: column; }
+      .sidebar {
+        width:100%;
+        border-right:none;
+        border-bottom:1px solid #111827;
+        flex-direction: row;
+        align-items: center;
+        overflow-x:auto;
+      }
+      .sidebar-footer { display:none; }
+      .form-grid{grid-template-columns:1fr;}
+      .app-shell{padding:16px 12px 40px;}
+    }
+  </style>
+</head>
+<body>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-title">Rainbow Tools</span>
+      <span class="logo-sub">by Mohammad Rehan</span>
+    </div>
+
+    <div class="menu-title">Menu</div>
+    <div class="menu-item active" data-target="hash-section">Hash Converter</div>
+    <div class="menu-item" data-target="builder-section">Rainbow Table Builder</div>
+    <div class="menu-item" data-target="cracker-section">Hash Lookup / Cracker</div>
+    <div class="menu-item" data-target="leak-section">Database Leak Demo</div>
+    <div class="menu-item" data-target="stored-section">Stored Rainbow Table</div>
+
+    <div class="sidebar-footer">
+      © 2025 <strong>Mohammad Rehan</strong><br/>
+      Academic demonstration only.
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="app-shell">
+      <header class="header">
+        <div class="lock-icon"><div class="lock-icon-inner"></div></div>
+        <div class="header-text">
+          <h1>Rainbow Table Lookup</h1>
+          <p>Hash Conversion • Rainbow Table Generation • Cracking • Leak Demo</p>
+        </div>
+      </header>
+
+      <!-- SECTION 1: HASH CONVERTER -->
+      <section id="hash-section" class="section active">
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>Plain Text → Hash Converter</h2>
+              <p>Simple hashing demo (SHA-256 or SHA-1) using browser Web Crypto.</p>
+            </div>
+            <span>Hash Converter</span>
+          </div>
+
+          <label for="hashText">Plain Text</label>
+          <textarea id="hashText" placeholder="Example: hii@123"></textarea>
+
+          <label for="hashAlgo" style="margin-top:8px;">Algorithm</label>
+          <select id="hashAlgo" class="select">
+            <option value="SHA-256">SHA-256</option>
+            <option value="SHA-1">SHA-1</option>
+          </select>
+
+          <button id="hashBtn" class="btn-main">
+            <span>🔐</span><span>Convert to Hash</span>
+          </button>
+
+          <div id="hashResult" class="result-box"></div>
+          <div class="small-note">
+            Uses <code>crypto.subtle.digest()</code>. This is separate from the toy hash used in rainbow table demo.
+          </div>
+        </section>
+      </section>
+
+      <!-- SECTION 2: BUILDER -->
+      <section id="builder-section" class="section">
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>Generate Rainbow Table</h2>
+              <p>Build multiple chains using hash → reduce → password steps.</p>
+            </div>
+            <span>Builder</span>
+          </div>
+
+          <div class="form-grid">
+            <div>
+              <label>Chain Length</label>
+              <input id="chainLength" class="input" type="number" value="5" min="1" />
+            </div>
+            <div>
+              <label>Number of Chains</label>
+              <input id="numChains" class="input" type="number" value="10" min="1" />
+            </div>
+            <div>
+              <label>Password Length</label>
+              <input id="passwordLength" class="input" type="number" value="4" min="1" />
+            </div>
+            <div>
+              <label>Character Set</label>
+              <select id="charset" class="select">
+                <option value="lowercase">Lowercase (a–z)</option>
+                <option value="uppercase">Uppercase (A–Z)</option>
+                <option value="numeric">Numbers (0–9)</option>
+                <option value="alphanumeric">Alphanumeric (a–z, A–Z, 0–9)</option>
+              </select>
+            </div>
+          </div>
+
+          <button id="generateBtn" class="btn-main">
+            <span>⚡</span><span>Generate Rainbow Table</span>
+          </button>
+          <div id="generateStatus" class="small-note" style="margin-top:10px;color:#22f4c8;"></div>
+        </section>
+
+        <section class="card">
+          <h2>Rainbow Table Chains <span id="chainCountLabel">(0 chains)</span></h2>
+          <p style="color:#9ca3af;font-size:13px;margin-top:4px;margin-bottom:10px;">
+            Click a chain header to expand / collapse its P/H steps.
+          </p>
+          <div id="chainsContainer" style="max-height:420px;overflow-y:auto;"></div>
+        </section>
+      </section>
+
+      <!-- SECTION 3: CRACKER -->
+      <section id="cracker-section" class="section">
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>Hash Lookup / Cracking</h2>
+              <p>Search the generated rainbow table to find a hash and recover its password.</p>
+            </div>
+            <span>Cracker</span>
+          </div>
+
+          <label for="crackHashInput">Target Hash (64 hex chars – toy hash)</label>
+          <textarea id="crackHashInput" placeholder="Paste a hash generated by this page"></textarea>
+
+          <button id="crackBtn" class="btn-main">
+            <span>🔍</span><span>Start Cracking</span>
+          </button>
+
+          <div id="crackResult" class="result-box"></div>
+        </section>
+
+        <section class="card">
+          <h2>Time & Operations</h2>
+          <p>Measured with <code>performance.now()</code>. Shows work done for last crack attempt.</p>
+          <div id="metricsBox" class="result-box">No runs yet.</div>
+        </section>
+      </section>
+
+      <!-- SECTION 4: LEAK DEMO -->
+      <section id="leak-section" class="section">
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>Database Leak Demo</h2>
+              <p>Fake leaked hashes from social / college / shopping / third-party apps.</p>
+            </div>
+            <span>Leak Demo</span>
+          </div>
+
+          <table class="leak-table">
+            <thead>
+              <tr>
+                <th>Site Type</th>
+                <th>Account</th>
+                <th>Hash (demo)</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="leakTableBody"></tbody>
+          </table>
+
+          <div class="small-note">
+            These hashes are generated using the same toy hash used for rainbow chains, so you can send them directly to the cracker.
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Explanation for Viva</h2>
+          <div class="result-box">
+• Many real breaches come from:
+  – Social networks
+  – College portals
+  – Shopping & food delivery sites
+  – Small third-party apps
+
+• Passwords are usually stored as hashes, not plain text.
+
+• If weak hashing is used (no salt, outdated algorithms), attackers can use precomputed rainbow tables (or similar techniques) to recover many original passwords from leaked databases.
+
+• This project demonstrates:
+  1. How text → hash works.
+  2. How a rainbow table is generated (password → hash → reduce → password).
+  3. How a leaked hash may be looked up in the table.
+          </div>
+        </section>
+      </section>
+
+      <!-- SECTION 5: STORED RAINBOW TABLE (LOCALSTORAGE) -->
+      <section id="stored-section" class="section">
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2>Stored Rainbow Table (Start–End Pairs)</h2>
+              <p>All chains you generated so far (start password and final hash + timestamp).</p>
+            </div>
+            <span>LocalStorage</span>
+          </div>
+
+          <button id="clearStoredBtn" class="btn-main" style="max-width:260px;margin-bottom:10px;">
+            🗑 Clear Stored Data
+          </button>
+
+          <table class="stored-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Start Password</th>
+                <th>End Hash</th>
+                <th>Generated At</th>
+              </tr>
+            </thead>
+            <tbody id="storedTableBody"></tbody>
+          </table>
+
+          <div class="small-note">
+            Data is stored in your browser using <code>localStorage</code> under key
+            <code>rainbowStoredChainsFull</code>. Full chain steps are stored, but this table shows only start / end / time.
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Stored Chains Viewer</h2>
+          <p>View old rainbow table chains (hash + reduce steps) from previous runs.</p>
+          <div id="storedChainsContainer" style="max-height:420px;overflow-y:auto;"></div>
+        </section>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // -------- SIDEBAR NAV --------
+    const menuItems = document.querySelectorAll(".menu-item");
+    const sections = document.querySelectorAll(".section");
+
+    menuItems.forEach(item => {
+      item.addEventListener("click", () => {
+        const targetId = item.getAttribute("data-target");
+        menuItems.forEach(m => m.classList.remove("active"));
+        item.classList.add("active");
+        sections.forEach(sec => {
+          sec.classList.toggle("active", sec.id === targetId);
+        });
+      });
+    });
+
+    // -------- HASH CONVERTER (REAL SHA) --------
+    const encoder = new TextEncoder();
+    async function browserHash(algorithm, text) {
+      const data = encoder.encode(text);
+      const digest = await crypto.subtle.digest(algorithm, data);
+      const bytes = new Uint8Array(digest);
+      return Array.from(bytes).map(b => b.toString(16).padStart(2,"0")).join("");
+    }
+
+    document.getElementById("hashBtn").addEventListener("click", async () => {
+      const text = document.getElementById("hashText").value.trim();
+      const algo = document.getElementById("hashAlgo").value;
+      const out  = document.getElementById("hashResult");
+
+      if (!text) {
+        out.textContent = "Please enter some text to hash.";
+        return;
+      }
+      out.textContent = "Computing hash...";
+      try {
+        const h = await browserHash(algo, text);
+        out.textContent = h;
+      } catch (e) {
+        out.textContent = "Hashing not supported in this browser.";
+      }
+    });
+
+    // -------- TOY HASH FOR RAINBOW TABLE --------
+    function toyHash(text) {
+      let h1 = 0x811c9dc5, h2 = 0x01000193;
+      for (let i = 0; i < text.length; i++) {
+        const c = text.charCodeAt(i);
+        h1 ^= c;
+        h1 = (h1 * 0x01000193) >>> 0;
+        h2 = (h2 + c * 31 + i) >>> 0;
+      }
+      let out = "";
+      for (let i = 0; i < 16; i++) {
+        const v = (i % 2 === 0 ? h1 : h2) + i * 0x9e3779b9;
+        out += (v >>> 0).toString(16).padStart(8, "0");
+      }
+      return out.slice(0, 64);
+    }
+
+    // -------- RAINBOW TABLE GLOBALS --------
+    let rainbowTable = [];
+    let lastCrackMetrics = null;
+
+    function getCharset(key) {
+      const sets = {
+        lowercase: "abcdefghijklmnopqrstuvwxyz",
+        uppercase: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        numeric:   "0123456789",
+        alphanumeric: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+      };
+      return sets[key] || sets.lowercase;
+    }
+
+    function randomPassword(len, charset) {
+      let out = "";
+      for (let i = 0; i < len; i++) {
+        out += charset[Math.floor(Math.random() * charset.length)];
+      }
+      return out;
+    }
+
+    function reduceHash(hash, len, charset) {
+      let pwd = "";
+      const base = charset.length;
+      for (let i = 0; i < len; i++) {
+        const slice = hash.substr(i * 2, 2);
+        const num = parseInt(slice || "00", 16);
+        pwd += charset[num % base];
+      }
+      return pwd;
+    }
+
+    // -------- LOCALSTORAGE: FULL CHAINS --------
+    const STORAGE_KEY = "rainbowStoredChainsFull";
+
+    function loadStoredChains() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveStoredChains(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function appendStoredChains(chainsFromRun) {
+      const existing = loadStoredChains();
+      const now = new Date();
+      const ts = now.toLocaleString();
+
+      chainsFromRun.forEach(ch => {
+        existing.push({
+          id: ch.id,
+          startPassword: ch.startPassword,
+          endHash: ch.endHash,
+          steps: ch.steps,
+          timestamp: ts
+        });
+      });
+
+      saveStoredChains(existing);
+      renderStoredTable();
+      renderStoredChainsViewer();
+    }
+
+    function renderStoredTable() {
+      const tbody = document.getElementById("storedTableBody");
+      const data  = loadStoredChains();
+      tbody.innerHTML = "";
+      if (!data.length) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="4" style="text-align:center;color:#9ca3af;">No stored chains yet.</td>`;
+        tbody.appendChild(tr);
+        return;
+      }
+      data.forEach((row, idx) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td>${row.startPassword}</td>
+          <td class="leak-hash">${(row.endHash || "").substring(0, 30)}…</td>
+          <td>${row.timestamp}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Stored view: DO NOT show collision highlight, even if stored steps have it
+    function createStepHTMLStored(step, index) {
+      const label = step.type === "password" ? "P" : "H";
+      return `
+<div class="step ${step.type === "password" ? "step-password" : "step-hash"}">
+  <div class="step-label">
+    ${label}${index} : ${step.type.toUpperCase()}
+  </div>
+  <div class="step-value">${step.value}</div>
+</div>`;
+    }
+
+    function renderStoredChainsViewer() {
+      const container = document.getElementById("storedChainsContainer");
+      if (!container) return;
+
+      const data = loadStoredChains();
+      container.innerHTML = "";
+
+      if (!data.length) {
+        container.innerHTML = `<div style="color:#9ca3af;font-size:13px;">No stored chains yet.</div>`;
+        return;
+      }
+
+      data.forEach(chain => {
+        const steps = chain.steps || [];
+        const stepsHTML = steps.map((s,i)=>createStepHTMLStored(s,i)).join("");
+        const div = document.createElement("div");
+        div.className = "chain-card";
+        div.innerHTML = `
+          <div class="chain-header">
+            <div class="chain-header-left">Stored Chain #${chain.id}</div>
+            <div class="chain-header-right">
+              <div class="chip">Start: ${chain.startPassword}</div>
+              <div class="chip">End: ${(chain.endHash || "").substring(0,16)}…</div>
+              <div class="chevron">▸</div>
+            </div>
+          </div>
+          <div class="chain-body">
+            ${stepsHTML}
+          </div>
+        `;
+        const header = div.querySelector(".chain-header");
+        const body   = div.querySelector(".chain-body");
+        const chev   = div.querySelector(".chevron");
+        body.style.display = "none";
+
+        header.addEventListener("click", () => {
+          const open = body.style.display === "block";
+          body.style.display = open ? "none" : "block";
+          chev.classList.toggle("open", !open);
+        });
+
+        container.appendChild(div);
+      });
+    }
+
+    document.getElementById("clearStoredBtn").addEventListener("click", () => {
+      if (confirm("Clear all stored rainbow chains?")) {
+        localStorage.removeItem(STORAGE_KEY);
+        renderStoredTable();
+        renderStoredChainsViewer();
+      }
+    });
+
+    // -------- STEP HTML WITH COLLISION HIGHLIGHT (CURRENT TABLE ONLY) --------
+    function createStepHTML(step, index) {
+      const label = step.type === "password" ? "P" : "H";
+      const isCurrent = step.collisionSource === "current";
+      const style = isCurrent
+        ? "background:#2b0f0f;border:1px solid #b91c1c;"
+        : "";
+
+      let collisionLabel = "";
+      if (step.collisionSource === "current") {
+        collisionLabel =
+          `<span style="color:#ff7b7b;font-weight:bold;"> ⚠ Collision with Chain #${step.collisionChain}</span>`;
+      }
+
+      return `
+<div class="step ${step.type === "password" ? "step-password" : "step-hash"}"
+     style="${style}">
+  <div class="step-label">
+    ${label}${index} : ${step.type.toUpperCase()}
+    ${collisionLabel}
+  </div>
+  <div class="step-value">${step.value}</div>
+</div>
+`;
+    }
+
+    function renderChains() {
+      const box = document.getElementById("chainsContainer");
+      const label = document.getElementById("chainCountLabel");
+      box.innerHTML = "";
+      label.textContent = `(${rainbowTable.length} chains)`;
+
+      rainbowTable.forEach(chain => {
+        const stepsHTML = chain.steps.map((s, i) => createStepHTML(s, i)).join("");
+        const div = document.createElement("div");
+        div.className = "chain-card";
+        div.innerHTML = `
+          <div class="chain-header">
+            <div class="chain-header-left">Chain #${chain.id}</div>
+            <div class="chain-header-right">
+              <div class="chip">Start: ${chain.startPassword}</div>
+              <div class="chip">End: ${chain.endHash.substring(0, 16)}…</div>
+              <div class="chevron">▸</div>
+            </div>
+          </div>
+          <div class="chain-body">
+            ${stepsHTML}
+          </div>
+        `;
+        const header = div.querySelector(".chain-header");
+        const body   = div.querySelector(".chain-body");
+        const chev   = div.querySelector(".chevron");
+        body.style.display = "none";
+
+        header.addEventListener("click", () => {
+          const open = body.style.display === "block";
+          body.style.display = open ? "none" : "block";
+          chev.classList.toggle("open", !open);
+        });
+
+        box.appendChild(div);
+      });
+    }
+
+    // -------- GENERATE RAINBOW TABLE (WITH COLLISION IN CURRENT TABLE ONLY) --------
+    document.getElementById("generateBtn").addEventListener("click", () => {
+      const chainLength = Number(document.getElementById("chainLength").value) || 5;
+      const numChains   = Number(document.getElementById("numChains").value) || 10;
+      const pwdLength   = Number(document.getElementById("passwordLength").value) || 4;
+      const charsetKey  = document.getElementById("charset").value;
+      const charset     = getCharset(charsetKey);
+
+      const status = document.getElementById("generateStatus");
+      rainbowTable = [];
+      renderChains();
+      status.textContent = "Generating...";
+
+      let operations = 0;
+      const t0 = performance.now();
+
+      for (let c = 0; c < numChains; c++) {
+        const startPwd = randomPassword(pwdLength, charset);
+        let current = startPwd;
+        const steps = [];
+        steps.push({ type: "password", value: current, collisionSource: null, collisionChain: null });
+
+        for (let step = 0; step < chainLength; step++) {
+          // HASH STEP
+          const h = toyHash(current);
+          operations++;
+
+          let collisionChain = null;
+          for (const other of rainbowTable) {
+            for (const st of other.steps) {
+              if (st.type === "hash" && st.value === h) {
+                collisionChain = other.id;
+                break;
+              }
+            }
+            if (collisionChain !== null) break;
+          }
+
+          steps.push({
+            type: "hash",
+            value: h,
+            collisionSource: collisionChain !== null ? "current" : null,
+            collisionChain
+          });
+
+          // REDUCE → PASSWORD
+          current = reduceHash(h, pwdLength, charset);
+
+          if (step !== chainLength - 1) {
+            let pwdCollision = null;
+            for (const other of rainbowTable) {
+              for (const st of other.steps) {
+                if (st.type === "password" && st.value === current) {
+                  pwdCollision = other.id;
+                  break;
+                }
+              }
+              if (pwdCollision !== null) break;
+            }
+
+            steps.push({
+              type: "password",
+              value: current,
+              collisionSource: pwdCollision !== null ? "current" : null,
+              collisionChain: pwdCollision
+            });
+          }
+        }
+
+        const endHash = toyHash(current);
+        steps.push({ type: "hash", value: endHash, collisionSource: null, collisionChain: null });
+
+        rainbowTable.push({
+          id: c,
+          startPassword: startPwd,
+          endHash,
+          steps
+        });
+      }
+
+      const t1 = performance.now();
+      status.textContent =
+        `✔ Generated ${numChains} chains (length=${chainLength}). Ops≈${operations}, time≈${(t1 - t0).toFixed(2)} ms`;
+
+      renderChains();
+      appendStoredChains(rainbowTable);
+    });
+
+    // -------- HASH CRACKER (SEARCH CURRENT + STORED) --------
+    document.getElementById("crackBtn").addEventListener("click", () => {
+      const target = document.getElementById("crackHashInput").value.trim();
+      const out    = document.getElementById("crackResult");
+      const metricsBox = document.getElementById("metricsBox");
+
+      if (!target) {
+        out.textContent = "Please paste a hash to crack.";
+        return;
+      }
+
+      let operations = 0;
+      const t0 = performance.now();
+      let found = null;
+
+      // 1) SEARCH CURRENT TABLE
+      for (const chain of rainbowTable) {
+        const steps = chain.steps || [];
+        for (let i = 0; i < steps.length; i++) {
+          const step = steps[i];
+          if (step.type === "hash") {
+            operations++;
+            if (step.value === target) {
+              let pwd = null;
+              for (let j = i - 1; j >= 0; j--) {
+                if (steps[j].type === "password") {
+                  pwd = steps[j].value;
+                  break;
+                }
+              }
+              found = {
+                source: "current",
+                chainId: chain.id,
+                password: pwd,
+                operations
+              };
+              break;
+            }
+          }
+        }
+        if (found) break;
+      }
+
+      // 2) IF NOT FOUND, SEARCH STORED TABLE
+      if (!found) {
+        const stored = loadStoredChains();
+        for (const chain of stored) {
+          const steps = chain.steps || [];
+          for (let i = 0; i < steps.length; i++) {
+            const step = steps[i];
+            if (step.type === "hash") {
+              operations++;
+              if (step.value === target) {
+                let pwd = null;
+                for (let j = i - 1; j >= 0; j--) {
+                  if (steps[j].type === "password") {
+                    pwd = steps[j].value;
+                    break;
+                  }
+                }
+                found = {
+                  source: "stored",
+                  chainId: chain.id,
+                  password: pwd,
+                  operations
+                };
+                break;
+              }
+            }
+          }
+          if (found) break;
+        }
+      }
+
+      const t1 = performance.now();
+      lastCrackMetrics = {
+        operations,
+        timeMs: t1 - t0
+      };
+
+      metricsBox.textContent =
+        `Operations: ${operations}\nTime: ${(t1 - t0).toFixed(2)} ms`;
+
+      if (!found) {
+        out.innerHTML = `
+          <div style="padding:14px;background:#240b0b;border:1px solid #b91c1c;
+          border-radius:10px;color:#fca5a5;">
+            ❌ Hash not found in any rainbow table.
+          </div>`;
+        return;
+      }
+
+      const color = found.source === "current" ? "#22f4c8" : "#f97316";
+
+      out.innerHTML = `
+        <div style="padding:18px;background:#042f2e;border:2px solid ${color};
+        border-radius:14px;">
+          <h3 style="color:${color};font-size:20px;margin-bottom:12px;">
+            ✔ Found in <b>${found.source.toUpperCase()}</b> table  
+            <br/>Chain #${found.chainId}
+            <br/>Password: <b>${found.password}</b>
+          </h3>
+        </div>`;
+    });
+
+    // -------- LEAK DEMO --------
+    const leakSamples = [
+      { site: "Social Media",  account: "rehan_01",    password: "hii@123" },
+      { site: "College Portal",account: "srm_student", password: "Sam#16" },
+      { site: "Shopping Site", account: "md786",       password: "md@786" },
+      { site: "3rd-Party App", account: "user_demo",   password: "abc123" },
+    ];
+
+    function buildLeakTable() {
+      const tbody = document.getElementById("leakTableBody");
+      tbody.innerHTML = "";
+      leakSamples.forEach(s => {
+        const h = toyHash(s.password);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${s.site}</td>
+          <td>${s.account}</td>
+          <td class="leak-hash">${h.substring(0, 40)}...</td>
+          <td><span class="leak-link">Use in Cracker</span></td>
+        `;
+        tr.querySelector(".leak-link").addEventListener("click", () => {
+          document.querySelector('.menu-item[data-target="cracker-section"]').click();
+          document.getElementById("crackHashInput").value = h;
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Initial renders
+    buildLeakTable();
+    renderStoredTable();
+    renderStoredChainsViewer();
+  </script>
+</body>
+</html>
